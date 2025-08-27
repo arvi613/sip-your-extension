@@ -3,6 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
 import { Settings, Save, TestTube } from "lucide-react";
 import { useState } from "react";
 
@@ -20,6 +21,8 @@ export interface SipConfig {
   password: string;
   port: string;
   protocol: 'UDP' | 'TCP' | 'TLS' | 'WS' | 'WSS';
+  echoCancellation: boolean;
+  automaticGainControl: boolean;
 }
 
 const SipSettings = ({ onConnect, onDisconnect, isConnected, onTest }: SipSettingsProps) => {
@@ -29,10 +32,12 @@ const SipSettings = ({ onConnect, onDisconnect, isConnected, onTest }: SipSettin
     username: '',
     password: '',
     port: '5060',
-    protocol: 'UDP'
+    protocol: 'UDP',
+    echoCancellation: true,
+    automaticGainControl: true
   });
 
-  const handleInputChange = (field: keyof SipConfig, value: string) => {
+  const handleInputChange = (field: keyof SipConfig, value: string | boolean) => {
     if (field === 'accountType') {
       const nextPort = value === 'AIX' ? '4569' : '5060';
       setConfig(prev => ({
@@ -144,6 +149,38 @@ const SipSettings = ({ onConnect, onDisconnect, isConnected, onTest }: SipSettin
               <option key={protocol} value={protocol}>{protocol}</option>
             ))}
           </select>
+        </div>
+
+        <Separator className="my-4" />
+        
+        <div className="space-y-4">
+          <h3 className="text-lg font-medium text-foreground">הגדרות אודיו</h3>
+          
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="echoCancellation" className="text-foreground">ביטול הד (Echo Cancellation)</Label>
+              <p className="text-xs text-muted-foreground">מבטל הדים במהלך השיחה</p>
+            </div>
+            <Switch
+              id="echoCancellation"
+              checked={config.echoCancellation}
+              onCheckedChange={(checked) => handleInputChange('echoCancellation', checked)}
+              disabled={isConnected}
+            />
+          </div>
+          
+          <div className="flex items-center justify-between">
+            <div className="space-y-0.5">
+              <Label htmlFor="automaticGainControl" className="text-foreground">בקרת עוצמה אוטומטית (AGC)</Label>
+              <p className="text-xs text-muted-foreground">מתאים אוטומטית את עוצמת המיקרופון</p>
+            </div>
+            <Switch
+              id="automaticGainControl"
+              checked={config.automaticGainControl}
+              onCheckedChange={(checked) => handleInputChange('automaticGainControl', checked)}
+              disabled={isConnected}
+            />
+          </div>
         </div>
 
         <Separator className="my-4" />
