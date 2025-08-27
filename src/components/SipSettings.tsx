@@ -14,6 +14,7 @@ interface SipSettingsProps {
 }
 
 export interface SipConfig {
+  accountType: 'SIP' | 'AIX';
   server: string;
   username: string;
   password: string;
@@ -23,6 +24,7 @@ export interface SipConfig {
 
 const SipSettings = ({ onConnect, onDisconnect, isConnected, onTest }: SipSettingsProps) => {
   const [config, setConfig] = useState<SipConfig>({
+    accountType: 'SIP',
     server: '',
     username: '',
     password: '',
@@ -31,6 +33,15 @@ const SipSettings = ({ onConnect, onDisconnect, isConnected, onTest }: SipSettin
   });
 
   const handleInputChange = (field: keyof SipConfig, value: string) => {
+    if (field === 'accountType') {
+      const nextPort = value === 'AIX' ? '4569' : '5060';
+      setConfig(prev => ({
+        ...prev,
+        accountType: value as SipConfig['accountType'],
+        port: nextPort,
+      }));
+      return;
+    }
     setConfig(prev => ({ ...prev, [field]: value }));
   };
 
@@ -53,6 +64,20 @@ const SipSettings = ({ onConnect, onDisconnect, isConnected, onTest }: SipSettin
       </div>
       
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="accountType" className="text-foreground">סוג שלוחה</Label>
+          <select
+            id="accountType"
+            value={config.accountType}
+            onChange={(e) => handleInputChange('accountType', e.target.value)}
+            className="w-full p-2 rounded-md bg-phone-button border border-border text-foreground"
+            disabled={isConnected}
+          >
+            <option value="SIP">SIP</option>
+            <option value="AIX">AIX</option>
+          </select>
+          <p className="text-xs text-muted-foreground">ברירת מחדל: SIP → 5060, AIX → 4569 (ניתן לשינוי)</p>
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="server" className="text-foreground">שרת SIP</Label>
