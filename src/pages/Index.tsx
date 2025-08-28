@@ -8,6 +8,8 @@ import { useSipPhone } from "@/hooks/useSipPhone";
 import { Phone, Settings, Clock, Smartphone } from "lucide-react";
 
 const Index = () => {
+  console.log('Index.tsx: Index component starting...');
+  
   const {
     sipStatus,
     currentCall,
@@ -20,6 +22,8 @@ const Index = () => {
     testConnection,
     isConnected
   } = useSipPhone();
+
+  console.log('Index.tsx: useSipPhone hook completed, sipStatus:', sipStatus);
 
   return (
     <div className="min-h-screen bg-phone-bg p-4">

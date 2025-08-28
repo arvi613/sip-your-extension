@@ -18,10 +18,14 @@ interface CurrentCall {
 }
 
 export const useSipPhone = () => {
+  console.log('useSipPhone: Hook initializing...');
+  
   const [sipStatus, setSipStatus] = useState<'disconnected' | 'connecting' | 'connected' | 'error'>('disconnected');
   const [currentCall, setCurrentCall] = useState<CurrentCall>({ number: '', status: 'idle' });
   const [callHistory, setCallHistory] = useState<CallRecord[]>([]);
   const [isCallActive, setIsCallActive] = useState(false);
+  
+  console.log('useSipPhone: State initialized successfully');
   
   const userAgentRef = useRef<UserAgent | null>(null);
   const currentSessionRef = useRef<Session | null>(null);
@@ -88,13 +92,15 @@ export const useSipPhone = () => {
     currentSessionRef.current = null;
   };
 
-  // Real SIP connection implementation
+  // Real SIP connection implementation with better error handling
   const connect = useCallback(async (config: SipConfig) => {
+    console.log('Connect function called with config:', config);
     setSipStatus('connecting');
     
     try {
       // Dispose existing user agent if any
       if (userAgentRef.current) {
+        console.log('Disposing existing user agent...');
         await userAgentRef.current.stop();
         userAgentRef.current = null;
       }
@@ -149,6 +155,7 @@ export const useSipPhone = () => {
         },
         delegate: {
           onInvite: (invitation) => {
+            console.log('Incoming call received');
             // Handle incoming calls
             const incomingNumber = invitation.remoteIdentity.uri.user || 'Unknown';
             setCurrentCall({
@@ -173,8 +180,10 @@ export const useSipPhone = () => {
       });
 
       userAgentRef.current = userAgent;
+      console.log('UserAgent created, starting...');
       
       await userAgent.start();
+      console.log('UserAgent started');
       
       // Wait for registration
       if (userAgent.isConnected()) {
@@ -188,11 +197,15 @@ export const useSipPhone = () => {
       console.error('SIP connection error:', error);
       setSipStatus('error');
       if (userAgentRef.current) {
-        userAgentRef.current.stop();
+        try {
+          userAgentRef.current.stop();
+        } catch (stopError) {
+          console.error('Error stopping user agent:', stopError);
+        }
         userAgentRef.current = null;
       }
     }
-  }, [currentCall]);
+  }, []);
 
   const disconnect = useCallback(async () => {
     try {
@@ -282,33 +295,35 @@ export const useSipPhone = () => {
   }, []);
 
   const testConnection = useCallback(async () => {
-    if (sipStatus !== 'connected' || !userAgentRef.current) {
-      console.log('SIP connection test: Not connected');
+    console.log('Test connection called, sipStatus:', sipStatus);
+    
+    if (sipStatus !== 'connected') {
+      console.log('SIP connection test: Not connected, status:', sipStatus);
+      alert('אין חיבור לשרת SIP. יש להתחבר תחילה.');
+      return;
+    }
+    
+    if (!userAgentRef.current) {
+      console.log('SIP connection test: No user agent');
+      alert('שגיאה: אין UserAgent פעיל.');
       return;
     }
     
     try {
       // Test connection by checking if user agent is connected and registered
       const isConnected = userAgentRef.current.isConnected();
-      const transport = userAgentRef.current.transport;
+      console.log('UserAgent isConnected:', isConnected);
       
-      if (isConnected && transport) {
+      if (isConnected) {
         console.log('SIP connection test: SUCCESS');
-        console.log('Transport state:', transport.state);
-        console.log('Server:', (userAgentRef.current.configuration.transportOptions as any)?.server);
-        
-        // Try a simple OPTIONS request as a keep-alive test
-        const testURI = new URI('sip', 'test', userAgentRef.current.configuration.uri?.host);
-        // This would be a more complete test in production
-        
-        alert('בדיקת חיבור SIP הצליחה! החיבור פעיל ותקין.');
+        alert('בדיקת חיבור SIP הצליחה! ✅ החיבור פעיל ותקין.');
       } else {
         console.log('SIP connection test: FAILED - Not properly connected');
-        alert('בדיקת חיבור SIP נכשלה! החיבור אינו פעיל.');
+        alert('בדיקת חיבור SIP נכשלה! ❌ החיבור אינו פעיל.');
       }
     } catch (error) {
       console.error('SIP connection test error:', error);
-      alert('שגיאה בבדיקת חיבור SIP: ' + error);
+      alert('שגיאה בבדיקת חיבור SIP: ' + String(error));
     }
   }, [sipStatus]);
 
@@ -320,6 +335,8 @@ export const useSipPhone = () => {
     };
   }, []);
 
+  console.log('useSipPhone: Returning hook values, sipStatus:', sipStatus);
+  
   return {
     sipStatus,
     currentCall,
