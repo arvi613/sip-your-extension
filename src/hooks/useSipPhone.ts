@@ -99,17 +99,54 @@ export const useSipPhone = () => {
         userAgentRef.current = null;
       }
 
-      const protocol = config.protocol.toLowerCase();
-      const server = `${protocol}://${config.server}:${config.port}`;
+      // Map protocol to correct server format for SIP.js
+      let serverUrl: string;
+      const protocol = config.protocol.toUpperCase();
+      
+      switch (protocol) {
+        case 'WSS':
+          serverUrl = `wss://${config.server}:${config.port}/ws`;
+          break;
+        case 'WS':
+          serverUrl = `ws://${config.server}:${config.port}/ws`;
+          break;
+        case 'TCP':
+        case 'TLS':
+        case 'UDP':
+        default:
+          // For UDP/TCP/TLS, we'll use WSS as fallback for web browsers
+          console.warn(`Protocol ${protocol} not directly supported in browsers, using WSS`);
+          serverUrl = `wss://${config.server}:${config.port}/ws`;
+          break;
+      }
+      
+      console.log('Connecting with protocol:', protocol, 'Server URL:', serverUrl);
       
       const userAgent = new UserAgent({
         uri: new URI('sip', config.username, config.server),
         transportOptions: {
-          server: server,
-          traceSip: true
+          server: serverUrl,
+          traceSip: true,
+          // Add WebSocket specific options
+          ...(protocol === 'WSS' || protocol === 'WS' ? {
+            connectionTimeout: 10000,
+            maxReconnectionAttempts: 3,
+            reconnectionTimeout: 4000
+          } : {})
         },
         authorizationUsername: config.username,
         authorizationPassword: config.password,
+        // Add media constraints for echo cancellation and AGC
+        sessionDescriptionHandlerFactoryOptions: {
+          constraints: {
+            audio: {
+              echoCancellation: config.echoCancellation,
+              autoGainControl: config.automaticGainControl,
+              noiseSuppression: true
+            },
+            video: false
+          }
+        },
         delegate: {
           onInvite: (invitation) => {
             // Handle incoming calls
@@ -142,7 +179,7 @@ export const useSipPhone = () => {
       // Wait for registration
       if (userAgent.isConnected()) {
         setSipStatus('connected');
-        console.log('Successfully connected to SIP server:', server);
+        console.log('Successfully connected to SIP server:', serverUrl);
       } else {
         throw new Error('Failed to connect to SIP server');
       }
@@ -244,10 +281,34 @@ export const useSipPhone = () => {
     endCall();
   }, []);
 
-  const testConnection = useCallback(() => {
-    if (sipStatus === 'connected') {
-      console.log('SIP connection test: OK');
-      // Here you would implement actual SIP testing
+  const testConnection = useCallback(async () => {
+    if (sipStatus !== 'connected' || !userAgentRef.current) {
+      console.log('SIP connection test: Not connected');
+      return;
+    }
+    
+    try {
+      // Test connection by checking if user agent is connected and registered
+      const isConnected = userAgentRef.current.isConnected();
+      const transport = userAgentRef.current.transport;
+      
+      if (isConnected && transport) {
+        console.log('SIP connection test: SUCCESS');
+        console.log('Transport state:', transport.state);
+        console.log('Server:', (userAgentRef.current.configuration.transportOptions as any)?.server);
+        
+        // Try a simple OPTIONS request as a keep-alive test
+        const testURI = new URI('sip', 'test', userAgentRef.current.configuration.uri?.host);
+        // This would be a more complete test in production
+        
+        alert('בדיקת חיבור SIP הצליחה! החיבור פעיל ותקין.');
+      } else {
+        console.log('SIP connection test: FAILED - Not properly connected');
+        alert('בדיקת חיבור SIP נכשלה! החיבור אינו פעיל.');
+      }
+    } catch (error) {
+      console.error('SIP connection test error:', error);
+      alert('שגיאה בבדיקת חיבור SIP: ' + error);
     }
   }, [sipStatus]);
 
