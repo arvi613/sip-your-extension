@@ -109,21 +109,43 @@ export const useSipPhone = () => {
       let serverUrl: string;
       const protocol = config.protocol.toUpperCase();
       
-      switch (protocol) {
-        case 'WSS':
-          serverUrl = `wss://${config.server}:${config.port}/ws`;
-          break;
-        case 'WS':
-          serverUrl = `ws://${config.server}:${config.port}/ws`;
-          break;
-        case 'TCP':
-        case 'TLS':
-        case 'UDP':
-        default:
-          // For UDP/TCP/TLS, we'll use WSS as fallback for web browsers
-          console.warn(`Protocol ${protocol} not directly supported in browsers, using WSS`);
-          serverUrl = `wss://${config.server}:${config.port}/ws`;
-          break;
+      // For AIX, use different connection approach
+      if (config.accountType === 'AIX') {
+        switch (protocol) {
+          case 'WSS':
+            serverUrl = `wss://${config.server}:${config.port}`;
+            break;
+          case 'WS':
+            serverUrl = `ws://${config.server}:${config.port}`;
+            break;
+          case 'TLS':
+            serverUrl = `wss://${config.server}:${config.port}`;
+            break;
+          case 'TCP':
+          case 'UDP':
+          default:
+            // For AIX TCP/UDP, try WSS fallback
+            serverUrl = `wss://${config.server}:${config.port}`;
+            break;
+        }
+      } else {
+        // Standard SIP
+        switch (protocol) {
+          case 'WSS':
+            serverUrl = `wss://${config.server}:${config.port}/ws`;
+            break;
+          case 'WS':
+            serverUrl = `ws://${config.server}:${config.port}/ws`;
+            break;
+          case 'TCP':
+          case 'TLS':
+          case 'UDP':
+          default:
+            // For UDP/TCP/TLS, we'll use WSS as fallback for web browsers
+            console.warn(`Protocol ${protocol} not directly supported in browsers, using WSS`);
+            serverUrl = `wss://${config.server}:${config.port}/ws`;
+            break;
+        }
       }
       
       console.log('Connecting with protocol:', protocol, 'Server URL:', serverUrl);
