@@ -198,8 +198,10 @@ const SipSettings = ({ onConnect, onDisconnect, isConnected, onTest }: SipSettin
           <Button
             type="button"
             variant="outline"
-            onClick={onTest}
-            disabled={!isConnected}
+            onClick={() => {
+              console.log('Test button clicked!');
+              onTest();
+            }}
             className="bg-phone-button hover:bg-phone-button-hover"
           >
             <TestTube className="h-4 w-4 mr-2 rtl:mr-0 rtl:ml-2" />
