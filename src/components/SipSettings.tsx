@@ -11,7 +11,7 @@ interface SipSettingsProps {
   onConnect: (config: SipConfig) => void;
   onDisconnect: () => void;
   isConnected: boolean;
-  onTest: () => void;
+  onTest: (config: SipConfig) => void;
 }
 
 export interface SipConfig {
@@ -20,7 +20,7 @@ export interface SipConfig {
   username: string;
   password: string;
   port: string;
-  protocol: 'UDP' | 'TCP' | 'TLS' | 'WS' | 'WSS';
+  protocol: 'UDP' | 'TCP' | 'TLS' | 'WS' | 'WSS' | 'TCP_UDP';
   echoCancellation: boolean;
   automaticGainControl: boolean;
 }
@@ -59,7 +59,7 @@ const SipSettings = ({ onConnect, onDisconnect, isConnected, onTest }: SipSettin
     }
   };
 
-  const protocols: SipConfig['protocol'][] = ['UDP', 'TCP', 'TLS', 'WS', 'WSS'];
+  const protocols: SipConfig['protocol'][] = ['UDP', 'TCP', 'TLS', 'WS', 'WSS', 'TCP_UDP'];
 
   return (
     <Card className="p-6 bg-phone-surface shadow-phone">
@@ -146,7 +146,7 @@ const SipSettings = ({ onConnect, onDisconnect, isConnected, onTest }: SipSettin
             disabled={isConnected}
           >
             {protocols.map(protocol => (
-              <option key={protocol} value={protocol}>{protocol}</option>
+              <option key={protocol} value={protocol}>{protocol === 'TCP_UDP' ? 'TCP + UDP' : protocol}</option>
             ))}
           </select>
         </div>
@@ -200,7 +200,7 @@ const SipSettings = ({ onConnect, onDisconnect, isConnected, onTest }: SipSettin
             variant="outline"
             onClick={() => {
               console.log('Test button clicked!');
-              onTest();
+              onTest(config);
             }}
             className="bg-phone-button hover:bg-phone-button-hover"
           >

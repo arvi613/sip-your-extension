@@ -84,7 +84,7 @@ const Index = () => {
               onConnect={connect}
               onDisconnect={disconnect}
               isConnected={isConnected}
-              onTest={testConnection}
+              onTest={(cfg) => testConnection(cfg)}
             />
           </TabsContent>
         </Tabs>

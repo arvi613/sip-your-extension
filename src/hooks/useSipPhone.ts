@@ -316,31 +316,87 @@ export const useSipPhone = () => {
     endCall();
   }, []);
 
-  const testConnection = useCallback(async () => {
-    console.log('Test connection called, sipStatus:', sipStatus);
-    
-    if (sipStatus !== 'connected') {
-      console.log('SIP connection test: Not connected, status:', sipStatus);
-      alert('אין חיבור לשרת SIP. יש להתחבר תחילה.');
+  const testConnection = useCallback(async (cfg?: SipConfig) => {
+    console.log('Test connection called, sipStatus:', sipStatus, 'cfg:', cfg);
+
+    // If config provided, perform a temporary WS connectivity test
+    if (cfg) {
+      try {
+        let serverUrl: string;
+        const protocol = cfg.protocol.toUpperCase();
+
+        if (cfg.accountType === 'AIX') {
+          switch (protocol) {
+            case 'WSS':
+              serverUrl = `wss://${cfg.server}:${cfg.port}`;
+              break;
+            case 'WS':
+              serverUrl = `ws://${cfg.server}:${cfg.port}`;
+              break;
+            case 'TLS':
+              serverUrl = `wss://${cfg.server}:${cfg.port}`;
+              break;
+            case 'TCP_UDP':
+            case 'TCP':
+            case 'UDP':
+            default:
+              serverUrl = `wss://${cfg.server}:${cfg.port}`;
+              break;
+          }
+        } else {
+          switch (protocol) {
+            case 'WSS':
+              serverUrl = `wss://${cfg.server}:${cfg.port}/ws`;
+              break;
+            case 'WS':
+              serverUrl = `ws://${cfg.server}:${cfg.port}/ws`;
+              break;
+            case 'TLS':
+            case 'TCP_UDP':
+            case 'TCP':
+            case 'UDP':
+            default:
+              console.warn(`Protocol ${protocol} not directly supported in browsers, using WSS`);
+              serverUrl = `wss://${cfg.server}:${cfg.port}/ws`;
+              break;
+          }
+        }
+
+        console.log('Testing connectivity to:', serverUrl);
+        const tempUA = new UserAgent({
+          uri: new URI('sip', cfg.username || 'test', cfg.server),
+          transportOptions: { server: serverUrl, traceSip: true },
+        });
+
+        await tempUA.start();
+        const ok = tempUA.isConnected();
+        await tempUA.stop();
+
+        if (ok) {
+          alert('בדיקת חיבור הצליחה! ✅ ניתן להתחבר לשרת.');
+        } else {
+          alert('בדיקת חיבור נכשלה ❌ לא ניתן להתחבר לשרת.');
+        }
+      } catch (error) {
+        console.error('SIP temp connection test error:', error);
+        alert('שגיאה בבדיקת חיבור: ' + String(error));
+      }
       return;
     }
-    
+
+    // Fallback: test current connection state
     if (!userAgentRef.current) {
       console.log('SIP connection test: No user agent');
-      alert('שגיאה: אין UserAgent פעיל.');
+      alert('אין חיבור פעיל. הזן הגדרות ולחץ בדיקה.');
       return;
     }
-    
+
     try {
-      // Test connection by checking if user agent is connected and registered
       const isConnected = userAgentRef.current.isConnected();
       console.log('UserAgent isConnected:', isConnected);
-      
       if (isConnected) {
-        console.log('SIP connection test: SUCCESS');
         alert('בדיקת חיבור SIP הצליחה! ✅ החיבור פעיל ותקין.');
       } else {
-        console.log('SIP connection test: FAILED - Not properly connected');
         alert('בדיקת חיבור SIP נכשלה! ❌ החיבור אינו פעיל.');
       }
     } catch (error) {
