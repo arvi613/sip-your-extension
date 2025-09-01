@@ -9,9 +9,10 @@ interface DialPadProps {
   onHangup: () => void;
   isCallActive: boolean;
   callStatus: 'idle' | 'calling' | 'connected' | 'ringing';
+  isMobile?: boolean;
 }
 
-const DialPad = ({ onCall, onHangup, isCallActive, callStatus }: DialPadProps) => {
+const DialPad = ({ onCall, onHangup, isCallActive, callStatus, isMobile = false }: DialPadProps) => {
   const [number, setNumber] = useState("");
 
   const dialPadButtons = [
@@ -85,12 +86,12 @@ const DialPad = ({ onCall, onHangup, isCallActive, callStatus }: DialPadProps) =
           <Button
             key={button.number}
             variant="outline"
-            className="h-16 w-16 flex flex-col items-center justify-center text-lg font-semibold bg-phone-button hover:bg-phone-button-hover border-border transition-all duration-200 hover:shadow-button"
+            className={`${isMobile ? 'h-14 w-14 text-base' : 'h-16 w-16 text-lg'} flex flex-col items-center justify-center font-semibold bg-phone-button hover:bg-phone-button-hover border-border transition-all duration-200 hover:shadow-button active:scale-95`}
             onClick={() => handleNumberPress(button.number)}
           >
-            <span className="text-xl">{button.number}</span>
+            <span className={isMobile ? 'text-lg' : 'text-xl'}>{button.number}</span>
             {button.letters && (
-              <span className="text-xs text-muted-foreground mt-1">
+              <span className={`${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground mt-1`}>
                 {button.letters}
               </span>
             )}

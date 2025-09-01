@@ -14,9 +14,10 @@ interface CallRecord {
 interface CallHistoryProps {
   calls: CallRecord[];
   onCallBack: (number: string) => void;
+  isMobile?: boolean;
 }
 
-const CallHistory = ({ calls, onCallBack }: CallHistoryProps) => {
+const CallHistory = ({ calls, onCallBack, isMobile = false }: CallHistoryProps) => {
   const getCallIcon = (type: CallRecord['type']) => {
     switch (type) {
       case 'incoming':

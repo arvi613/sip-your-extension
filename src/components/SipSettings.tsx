@@ -12,6 +12,7 @@ interface SipSettingsProps {
   onDisconnect: () => void;
   isConnected: boolean;
   onTest: (config: SipConfig) => void;
+  isMobile?: boolean;
 }
 
 export interface SipConfig {
@@ -25,7 +26,7 @@ export interface SipConfig {
   automaticGainControl: boolean;
 }
 
-const SipSettings = ({ onConnect, onDisconnect, isConnected, onTest }: SipSettingsProps) => {
+const SipSettings = ({ onConnect, onDisconnect, isConnected, onTest, isMobile = false }: SipSettingsProps) => {
   const [config, setConfig] = useState<SipConfig>({
     accountType: 'SIP',
     server: '',
@@ -62,7 +63,7 @@ const SipSettings = ({ onConnect, onDisconnect, isConnected, onTest }: SipSettin
   const protocols: SipConfig['protocol'][] = ['UDP', 'TCP', 'TLS', 'WS', 'WSS', 'TCP_UDP'];
 
   return (
-    <Card className="p-6 bg-phone-surface shadow-phone">
+    <Card className={`${isMobile ? 'p-4' : 'p-6'} bg-phone-surface shadow-phone`}>
       <div className="flex items-center space-x-2 rtl:space-x-reverse mb-4">
         <Settings className="h-5 w-5 text-primary" />
         <h2 className="text-xl font-semibold text-foreground">הגדרות SIP</h2>
@@ -83,7 +84,7 @@ const SipSettings = ({ onConnect, onDisconnect, isConnected, onTest }: SipSettin
           </select>
           <p className="text-xs text-muted-foreground">ברירת מחדל: SIP → 5060, AIX → 4569 (ניתן לשינוי)</p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className={`grid grid-cols-1 ${isMobile ? 'gap-3' : 'md:grid-cols-2 gap-4'}`}>
           <div className="space-y-2">
             <Label htmlFor="server" className="text-foreground">שרת SIP</Label>
             <Input
@@ -109,7 +110,7 @@ const SipSettings = ({ onConnect, onDisconnect, isConnected, onTest }: SipSettin
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className={`grid grid-cols-1 ${isMobile ? 'gap-3' : 'md:grid-cols-2 gap-4'}`}>
           <div className="space-y-2">
             <Label htmlFor="username" className="text-foreground">שם משתמש</Label>
             <Input
