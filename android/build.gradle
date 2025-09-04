@@ -27,6 +27,25 @@ allprojects {
     }
 }
 
+// Enforce Java 17 across all subprojects (fixes "invalid source release: 21")
+subprojects { project ->
+    afterEvaluate {
+        if (project.plugins.hasPlugin('com.android.application') || project.plugins.hasPlugin('com.android.library')) {
+            project.android {
+                compileOptions {
+                    sourceCompatibility JavaVersion.VERSION_17
+                    targetCompatibility JavaVersion.VERSION_17
+                }
+            }
+        }
+        tasks.withType(JavaCompile).configureEach {
+            sourceCompatibility = JavaVersion.VERSION_17
+            targetCompatibility = JavaVersion.VERSION_17
+            options.release = 17
+        }
+    }
+}
+
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
