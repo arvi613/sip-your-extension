@@ -149,13 +149,13 @@ const SipSettings = ({ onConnect, onDisconnect, isConnected, onTest, isMobile = 
                 placeholder="••••••••"
                 value={config.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
-                className="bg-phone-button border-border text-foreground pr-10"
+                className="bg-phone-button border-border text-foreground pl-10"
                 disabled={isConnected}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                 disabled={isConnected}
               >
                 {showPassword ? (
