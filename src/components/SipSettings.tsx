@@ -4,8 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
-import { Settings, Save, TestTube } from "lucide-react";
-import { useState } from "react";
+import { Settings, Save, TestTube, Eye, EyeOff } from "lucide-react";
+import { useState, useEffect } from "react";
 
 interface SipSettingsProps {
   onConnect: (config: SipConfig) => void;
@@ -27,16 +27,33 @@ export interface SipConfig {
 }
 
 const SipSettings = ({ onConnect, onDisconnect, isConnected, onTest, isMobile = false }: SipSettingsProps) => {
-  const [config, setConfig] = useState<SipConfig>({
-    accountType: 'SIP',
-    server: '',
-    username: '',
-    password: '',
-    port: '5060',
-    protocol: 'UDP',
-    echoCancellation: true,
-    automaticGainControl: true
+  const [showPassword, setShowPassword] = useState(false);
+  const [config, setConfig] = useState<SipConfig>(() => {
+    // טעינת הגדרות מ-localStorage
+    const savedConfig = localStorage.getItem('sipConfig');
+    if (savedConfig) {
+      try {
+        return JSON.parse(savedConfig);
+      } catch (e) {
+        console.error('Failed to parse saved config:', e);
+      }
+    }
+    return {
+      accountType: 'SIP',
+      server: '',
+      username: '',
+      password: '',
+      port: '5060',
+      protocol: 'UDP',
+      echoCancellation: true,
+      automaticGainControl: true
+    };
   });
+
+  // שמירת הגדרות ב-localStorage כשהן משתנות
+  useEffect(() => {
+    localStorage.setItem('sipConfig', JSON.stringify(config));
+  }, [config]);
 
   const handleInputChange = (field: keyof SipConfig, value: string | boolean) => {
     if (field === 'accountType') {
@@ -125,15 +142,29 @@ const SipSettings = ({ onConnect, onDisconnect, isConnected, onTest, isMobile = 
           
           <div className="space-y-2">
             <Label htmlFor="password" className="text-foreground">סיסמה</Label>
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              value={config.password}
-              onChange={(e) => handleInputChange('password', e.target.value)}
-              className="bg-phone-button border-border text-foreground"
-              disabled={isConnected}
-            />
+            <div className="relative">
+              <Input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                value={config.password}
+                onChange={(e) => handleInputChange('password', e.target.value)}
+                className="bg-phone-button border-border text-foreground pr-10"
+                disabled={isConnected}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                disabled={isConnected}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </button>
+            </div>
           </div>
         </div>
 
